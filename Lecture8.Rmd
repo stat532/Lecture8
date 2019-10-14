@@ -1,0 +1,225 @@
+---
+title: "Lecture 8"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+ggplotColours <- function(n=6, h=c(0, 360) +15){
+  if ((diff(h)%%360) < 1) h[2] <- h[2] - 360/n
+    hcl(h = (seq(h[1], h[2], length = n)), c = 100, l = 65)
+}
+```
+
+## Hierarchical Modeling
+
+This chapter focuses on comparison of means across groups and more generally Bayesian hierarchical modeling. Hierarchical modeling is defined by datasets with a multilevel structure, such as:
+	 
+\vfill
+
+	  
+\vfill
+The most basic form of this type of data consists of two-levels, groups and individuals within groups.
+\vfill
+Recall, observations are exchangeable if $p(y_1, \dots, y_n) = p(y_{\pi_1}, \dots, y_{\pi_n})$. Consider where $Y_1, \dots, Y_n$ are test scores from randomly selected students from a given STAT 216 instructor/course. If exchangeability holds for these values, then:
+
+\vfill
+
+The exchangeability can be interpreted that the random variables are independent samples from a population with a parameter, $\phi$. For instance in a normal model, $\phi = \{\theta,\sigma^2\}$ and the data are conditionally independent from a normal distribution $N(\theta,\sigma^2).$
+\vfill
+In a hierarchical framework this can be extended to include the group number:
+
+\vfill
+
+The question now is how to we characterize the information between $\phi_1, \dots, \phi_m$?
+\vfill
+Is it reasonable to assume that the values are independent,
+\vfill
+\newpage
+
+Now consider the groups as samples from a larger population, then using the idea of exchangeability with group-specific parameters gives:
+\begin{eqnarray*}
+\phi_1, \dots, \phi_m | \psi \sim \text{i.i.d. } p(\phi|\psi).
+\end{eqnarray*}
+\vfill
+This is similar to the idea of a random effect model and gives the following hierarchical probability model:
+\begin{eqnarray*}
+y_{1,j}, \dots, y_{n_j,j} |\phi_j &\sim& p(y|\phi_j) \hspace{3cm} \\
+\phi_1, \dots, \phi_m |\psi &\sim& p(\phi|\psi) \hspace{3.1cm} \\
+\psi &\sim & p(\psi)  \hspace{3.43cm} 
+\end{eqnarray*}
+\vfill
+
+The distributions $p(y|\phi)$ and $p(\phi|\psi)$ represent sampling variability:
+
+- $p(y|\phi)$ represents 
+- $p(\phi|\psi)$ represents 
+
+#### Hierarchical normal model
+The hierarchical normal model is often used for modeling differing means across a population.
+\begin{eqnarray*}
+\phi_j =\{ \theta_j, \sigma^2 \}, p(y|\phi_j) &=& \\
+\psi = \{\mu,\tau\}, p(\theta_j|\psi) &=&
+\end{eqnarray*}
+\vfill
+Note this model specification assumes constant variance for each within-group model, but this assumption can be relaxed.
+\vfill
+This model contains three unknown parameters that need priors, we will use the standard semi-conjugate forms:
+\begin{eqnarray*}
+\sigma^2 & \sim & \\
+\tau^2 & \sim & \\
+\mu &\sim & 
+\end{eqnarray*}
+\vfill
+Given these priors, we need to derive the full conditional distributions in order to make draws from the posterior distribution. Note the joint posterior distribution, can be expressed as:
+\begin{eqnarray*}
+p(\tilde{\theta}, \mu, \tau^2, \sigma^2|\tilde{y}_1, \dots, \tilde{y}_n)& \propto& p(\mu, \tau^2, \sigma^2) \times p(\tilde{\theta}|\mu,\tau^2,\sigma^2) \times p(\tilde{y}_1, \dots, \tilde{y}_m|\tilde{\theta},\mu,\tau^2,\sigma^2)\\
+& \propto & p(\mu)p(\sigma^2)p(\tau^2) \times \left(\prod_{j=1}^m p(\theta_j|\mu,\tau^2) \right) \times \left(\prod_{j=1}^m \prod_{i=1}^{n_j} p(y_{i,j}|\theta_j,\sigma^2) \right).
+\end{eqnarray*}
+\vfill
+\newpage
+
+#### Posterior Samples
+
+1. Sampling $\mu$: $p(\mu|-) \propto p(\mu) \prod_{j=1}^m p(\theta_j|\mu,\tau^2).$ This is a familiar setting with two normal models, hence, the posterior is also a normal distribution.
+\vfill
+$\mu|- \sim normal\left( \frac{m\bar{\theta}/\tau^2 + \mu_0/ \gamma_0^2}{m/ \tau^2 + 1/ \gamma_0^2}, \left[ m/\tau^2 + 1/ \gamma_0^2 \right]^{-1} \right)$
+\vfill
+
+2. Sampling $\tau^2$: $p(\tau^2|-) \propto p(\tau^2) \prod_{j=1}^m p(\theta_j|\mu,\tau^2).$ Again this is similar to what we have seen before.
+\vfill
+$\tau^2| - \sim InvGamma \left(\frac{\eta_0 + m}{2},\frac{\eta_0 \tau_0^2 + \sum_j(\theta_j - \mu)^2}{2} \right)$
+\vfill
+
+Now what about $\theta_1, \dots, \theta_m$?
+\vfill
+3. Sampling $\theta_1, \dots, \theta_m$}. Consider a single $\theta_j$, then $\theta_j|- \propto p(\theta_j|\mu, \tau^2) \prod_{i=1}^{n_j} p(y_{i,j}|\theta_j,\sigma^2)$.  
+\vfill
+$\theta_j|- \sim$
+\vfill4. Sampling $\sigma^2$: $p(\sigma^2|-) \propto p(\sigma^2) \prod_{j=1}^m \prod_{i=1}^{n_j} p(y_{i,j}|\theta_j,\sigma)$. 
+\vfill
+$\sigma^2|- \sim InvGamma \left( \frac{1}{2} \left[ \nu_0 + \sum_{j=1}^m n_j\right], \frac{1}{2} \left[\nu_0 \sigma_0^2 + \sum_{j=1}^m \sum_{i=1}^{n_j} (y_{i,j} - \theta_j)^2 \right] \right).$
+
+\newpage
+#### Data Example
+Consider the dataset outline in Chapter 8, that focuses on math tests scores for students spread across 100 schools. Using the Gibbs sampling procedure described above we can fit this model, code courtesy of textbook.
+
+```{r, eval = T}
+Y <- dget("http://www2.stat.duke.edu/~pdh10/FCBS/Inline/Y.school.mathscore")
+
+### weakly informative priors
+nu0 <- 1
+sigmasq.0 <-100
+eta.0<-1
+tausq.0<-100
+mu.0<-50
+gammasq.0<-25
+###
+
+### starting values
+m <- length(unique(Y[,1])) # number of schools
+n<-sv<-ybar<-rep(NA,m)
+for(j in 1:m) {
+  ybar[j]<-mean(Y[Y[,1]==j,2])
+  sv[j]<-var(Y[Y[,1]==j,2])
+  n[j]<-sum(Y[,1] ==j)
+}
+
+theta<-ybar
+sigma2<-mean(sv)
+mu<-mean(theta)
+tau2<-var(theta)
+###
+
+### setup MCMC
+set.seed(1)
+S<-5000
+THETA<-matrix( nrow=S,ncol=m)
+MST<-matrix( nrow=S,ncol=3)
+###
+
+### MCMC algorithm
+for (s in 1:S){
+  # sample new values of the thetas
+  for (j in 1:m){
+    vtheta<-1/(n[j]/sigma2+1/tau2)
+    etheta<-vtheta*(ybar[j]*n[j]/sigma2+mu/tau2)
+    theta[j]<-rnorm(1,etheta,sqrt(vtheta))
+  }
+
+  #sample new value of sigma2
+  nun<-nu0+sum(n)
+  ss<-nu0*sigmasq.0;
+  for(j in 1:m){
+    ss<-ss+sum((Y[[j]]-theta[j])^2)
+  }
+  sigma2<-1/rgamma(1,nun/2,ss/2)
+
+  #sample a new value of mu
+  vmu<- 1/(m/tau2+1/gammasq.0)
+  emu<- vmu*(m*mean(theta)/tau2 + mu.0/gammasq.0)
+  mu<-rnorm(1,emu,sqrt(vmu))
+
+  # sample a new value of tau2
+  etam<-eta.0+m
+  ss<- eta.0*tausq.0 + sum( (theta-mu)^2 )
+  tau2<-1/rgamma(1,etam/2,ss/2)
+
+  #store results
+  THETA[s,]<-theta
+  MST[s,]<-c(mu,sigma2,tau2)
+}
+```
+\vfill
+
+
+```{r, echo = F}
+post.samples <- data.frame(post.mean = c(THETA[,46],THETA[,82]), school = as.factor(c(rep(46,5000), rep(82,5000) )))
+
+Y_df <- Y %>% tbl_df()
+
+ggplot(data = post.samples, aes(post.mean, color = school)) + geom_density(aes(color = school)) + annotate("point", x = Y_df %>% filter(school == 46) %>% select(mathscore) %>% pull(), y = -.01,
+  colour = ggplotColours(2)[1], size = 1.5) +annotate("point", x = Y_df %>% filter(school == 46) %>% select(mathscore) %>% pull() %>% mean(), y = -.01,
+  colour = ggplotColours(2)[1], size = 5) + annotate("point", x = Y_df %>% filter(school == 82) %>% select(mathscore) %>% pull(), y = -.02,
+  colour = ggplotColours(2)[2], size = 1.5) + annotate("point", x = post.samples %>% filter(school == 82) %>% select(post.mean) %>% pull() %>% mean(), y = -.02,
+  colour = ggplotColours(2)[2], size = 5, shape =3) + annotate("point", x = Y_df %>% filter(school == 82) %>% select(mathscore) %>% pull() %>% mean(), y = -.02,
+  colour = ggplotColours(2)[2], size = 5)  + annotate("point", x = post.samples %>% filter(school == 46) %>% select(post.mean) %>% pull() %>% mean(), y = -.01,
+  colour = ggplotColours(2)[1], size = 5, shape =3) + xlab('')
+```
+\vfill
+
+Interpret the figure created above. What are the small circle, large circles, and the plus signs?
+\vfill
+Why does this happen and is it a good thing?
+\vfill
+
+\newpage
+#### Shrinkage
+Recall the posterior mean can be represented as a weighted average, specifically:
+\begin{equation}
+E[\theta_j|\tilde{y}_j, \mu, \tau^2, \sigma^2] = \frac{\bar{y}_j n_j / \sigma^2 + \mu / \tau^2}{n_j/\sigma^2 + 1/ \tau^2}.
+\end{equation}
+In this case $\mu$ and $\tau^2$ are not chosen parameters from prior distributions, but rather they come from the between group model. So the posterior means for test scores at each school are pulled from the sample mean toward the overall group mean across all of the schools. This phenemenon is known as *shrinkage*.
+\vfill
+Schools with more students taking the exam see less shrinkage, as there is more weight on the data given more observations. So the figure we discussed before, shows more shrinkage for school 82 as there were fewer observations.
+\vfill
+So what about shrinkage, does it make sense? Is it a good thing? 
+\vfill
+We will soon see that it is an extremely powerful tool and actually dominates the unbiased estimator (the MLE for each distribution). This suprising result is commonly known as Stein's Paradox.
+\vfill
+
+#### Hierarchical Modeling of Means and Variances
+The model we just described and fit was somewhat restrictive in that each school was known to have a common variance. It is likely that schools with a more heterogenous mix of students would have greater variance in the test scores. There are a couple of solutions, the first involves a set of i.i.d. priors on each $\sigma_j^2$
+\begin{equation}
+ \sigma_1^2, \dots, \sigma_m^2 \sim \text{i.i.d. } gamma(\nu_0/2, \nu_0 \sigma_0^2/2),
+\end{equation}
+however, this results in a full conditional distribution for $\sigma_j$ that only takes advantage of data from school $j$. In other words no information from the other schools is used to estimate that variance. 
+\vfill
+
+Another option is to consider $\nu_0$ and $\sigma_0^2$ as parameters to be estimated in the hierarchical model. A common prior for $\sigma_0^2$ would be $p(\sigma_0^2) \sim Gamma(a,b)$. Unfortunately, there is not a semi-conjugate prior distribution for $\nu_0$. The textbook suggests a geometric distribution, where $p(\nu_0) \propto \exp(-\alpha \nu_0)$. Then the full conditional distribution allows a sampling procedure that enumerates over the domain of possible values. This procedure allows shrinkage for the variance terms as well. It is worth noting, that pooling variances is a common way to tackle this particular problem.
+\vfill
+
+
+
